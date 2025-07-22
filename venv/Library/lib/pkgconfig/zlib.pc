@@ -1,0 +1,13 @@
+prefix=D:/github connected/Intelligent-Sql-Query/Intelligent-Sql-Query/venv/Library
+exec_prefix=D:/github connected/Intelligent-Sql-Query/Intelligent-Sql-Query/venv/Library
+libdir=D:/github connected/Intelligent-Sql-Query/Intelligent-Sql-Query/venv/Library/lib
+sharedlibdir=D:/github connected/Intelligent-Sql-Query/Intelligent-Sql-Query/venv/Library/lib
+includedir=D:/github connected/Intelligent-Sql-Query/Intelligent-Sql-Query/venv/Library/include
+
+Name: zlib
+Description: zlib compression library
+Version: 1.2.13
+
+Requires:
+Libs: -L${libdir} -L${sharedlibdir} -lz
+Cflags: -I${includedir}
