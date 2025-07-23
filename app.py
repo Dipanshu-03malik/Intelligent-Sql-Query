@@ -1,15 +1,16 @@
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv() # Load all the environment variables from .env file
 
 import streamlit as st
 import os
 import sqlite3
 import google.generativeai as genai
-from google.api_core.exceptions import NotFound 
+from google.api_core.exceptions import NotFound
 
 # Configure our Google Gemini API KEY
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
+# --- Helper function to list available Gemini models (for debugging model 404) ---
 def list_gemini_models():
     """Lists available Gemini models that support generateContent."""
     st.sidebar.subheader("Available Gemini Models:")
@@ -24,27 +25,44 @@ def list_gemini_models():
     if not found_models:
         st.sidebar.write("No models found that support 'generateContent' with your current API key and region.")
     st.sidebar.markdown("---")
+
+# Call this function to display available models in the sidebar for debugging
 list_gemini_models()
+# --- End of helper function ---
 
 
 # Function to load Google Gemini model and get SQL query response
 def get_gemini_response(question, prompt_text):
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash') 
+        model = genai.GenerativeModel('gemini-1.5-flash') # Keep this or change based on your available models
         response = model.generate_content([prompt_text, question])
-        return response.text
+        generated_text = response.text
+
+        # --- CRUCIAL ADDITION: Clean the generated SQL query ---
+        # Remove markdown code block delimiters and any leading/trailing whitespace
+        if generated_text.startswith("```sql"):
+            generated_text = generated_text[len("```sql"):].strip()
+        if generated_text.endswith("```"):
+            generated_text = generated_text[:-len("```")].strip()
+        
+        # Remove the "undefined" keyword if it appears at the end
+        if generated_text.lower().endswith("undefined"):
+            generated_text = generated_text[:-len("undefined")].strip()
+        # --- End of cleaning ---
+
+        return generated_text
     except NotFound as e:
         st.error(f"Model Not Found Error: {e}. Please check if the model name is correct and available in your region.")
         st.error("You can use the 'Available Gemini Models' section in the sidebar to find valid model names.")
-        return "" 
+        return "" # Return empty string on error
     except Exception as e:
         st.error(f"An unexpected error occurred with Gemini API: {e}")
-        return ""
+        return "" # Return empty string on other errors
 
 
 # Function to retrieve query from SQL database
 def read_sql_query(sql, db):
-    conn = None 
+    conn = None
     try:
         conn = sqlite3.connect(db)
         cur = conn.cursor()
@@ -53,11 +71,11 @@ def read_sql_query(sql, db):
         conn.commit()
         return rows
     except sqlite3.Error as e:
-        st.error(f"Database error during query execution: {e}. Please check the generated SQL query.")
-        st.code(f"Generated SQL: {sql}", language="sql")
-        return [] 
+        st.error(f"Database error during query execution: {e}. This likely means the generated SQL is malformed.")
+        st.code(f"Problematic SQL: {sql}", language="sql") # Show the problematic SQL for debugging
+        return []
     finally:
-        if conn: 
+        if conn:
             conn.close()
 
 
@@ -67,7 +85,7 @@ prompt = """
     For example:
     Example 1 - How many entries of records are present?, the SQL command will be something like this: SELECT COUNT(*) FROM STUDENT;
     Example 2 - Tell me all the students studying in Data Science class?, the SQL command will be something like this: SELECT * FROM STUDENT WHERE CLASS="Data Science";
-    The SQL code should NOT have ``` (backticks) in the beginning or end, and should NOT include the word 'sql' in the output.
+    The SQL code should NOT have ``` (backticks) in the beginning or end, and should NOT include the word 'sql' or 'undefined' in the output.
 """
 
 # Streamlit UI
@@ -81,10 +99,11 @@ if submit:
     # Get the SQL query from Gemini
     generated_sql_query = get_gemini_response(question, prompt)
 
-    if generated_sql_query: 
-        print(f"Generated SQL Query: {generated_sql_query}") # P
+    if generated_sql_query:
+        # Print the generated query to console (after cleaning)
+        print(f"Cleaned Generated SQL Query: {generated_sql_query}")
+
         # Execute the SQL query on your database
-        # Ensure the database file name matches what you used in SQL_PY.py for connection
         data_from_db = read_sql_query(generated_sql_query, "student.db")
 
         st.subheader("Results from the Database:")
@@ -92,6 +111,6 @@ if submit:
             for row in data_from_db:
                 st.write(row)
         else:
-            st.write("No data found for your query or an error occurred during SQL execution.")
+            st.write("No data found for your query or an error occurred during SQL execution. Please check the 'Problematic SQL' above.")
     else:
-        st.write("Gemini could not generate a valid SQL query. Please try rephrasing your question or check the API key/model.")
+        st.write("Gemini could not generate a valid SQL query. Please try rephrasing your question or check the API key/model configuration.")
