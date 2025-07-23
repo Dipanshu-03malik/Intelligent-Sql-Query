@@ -1,26 +1,29 @@
 import sqlite3
 
-# connect sqllite
+# Connect to the SQLite database. It will be created if it doesn't exist.
+connection = sqlite3.connect("student.db")
 
-connection=sqlite3.connect("student.db")
+# Create a cursor object to execute SQL commands
+cursor = connection.cursor()
 
-# create a cursor obj to insert the recored, create table,retrieve
-cursor=connection.cursor()
-
-#create table
-
-table_info="""
-Create table STUDENTSS(NAME VARCHAR(25), CLASS VARCHAR(25),SECTION VARCHAR(25),MARKS int);"""
-
+table_info = """
+CREATE TABLE IF NOT EXISTS STUDENT(
+    NAME VARCHAR(25),
+    CLASS VARCHAR(25),
+    SECTION VARCHAR(25),
+    MARKS INT
+);
+"""
 cursor.execute(table_info)
-# insert records
 
+# Insert sample records into the STUDENT table
+# Ensure the table name 'STUDENT' matches the CREATE TABLE statement
 cursor.execute("INSERT INTO STUDENT VALUES('Alice Smith','10th','A',95);")
 cursor.execute("INSERT INTO STUDENT VALUES('Bob Johnson','10th','B',88);")
 cursor.execute("INSERT INTO STUDENT VALUES('Charlie Brown','9th','A',72);")
 cursor.execute("INSERT INTO STUDENT VALUES('Diana Prince','11th','C',91);")
 cursor.execute("INSERT INTO STUDENT VALUES('Ethan Hunt','10th','A',78);")
-cursor.execute("INSERT INTO STUDENT VALUES('Fiona Green','9th','B',65);")
+cursor.execute("INSERT INTO STUDENT VALUES('Fiona Green','9th','B',50);")
 cursor.execute("INSERT INTO STUDENT VALUES('George White','12th','A',80);")
 cursor.execute("INSERT INTO STUDENT VALUES('Hannah Rose','11th','B',93);")
 cursor.execute("INSERT INTO STUDENT VALUES('Ivy Black','10th','C',70);")
@@ -41,12 +44,16 @@ cursor.execute("INSERT INTO STUDENT VALUES('Will Turner','12th','B',77);")
 cursor.execute("INSERT INTO STUDENT VALUES('Xenia Chen','11th','A',96);")
 cursor.execute("INSERT INTO STUDENT VALUES('Yara Lopez','10th','B',83);")
 
-print("Inserted records are ")
-data = cursor.execute('''Select * from STUDENT''')
+# Commit the changes to save the inserted records to the database file
+connection.commit()
+
+print("Inserted records are:")
+# Retrieve and print all records to confirm insertion
+data = cursor.execute('''SELECT * FROM STUDENT''')
 for row in data:
     print(row)
 
-# close connection
-
-connection.commit()
+# Close the database connection
 connection.close()
+
+print("\nDatabase 'student.db' created and populated successfully.")
