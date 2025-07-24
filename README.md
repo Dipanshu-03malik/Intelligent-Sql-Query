@@ -87,7 +87,7 @@ This command will open the Streamlit application in your default web browser. If
 
 *(Once deployed, you can add your live application link here)*
 
-**Deployed Application Link:** [https://dipanshu-03malik-intelligent-sql-query-app-etmwzd.streamlit.app/]
+**Deployed Application Link:** [https://dipanshu-03malik-intelligent-sql-query-app-kc8wqc.streamlit.app/]
 
 ## Troubleshooting
 
